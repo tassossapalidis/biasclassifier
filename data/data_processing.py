@@ -8,6 +8,8 @@ import re
 ## USAGE ##
 # use process_input function to format an input for inference
 # run this file as a script to produce training data as a csv
+### if you run as script, output will be a csv, with col0 being the content
+### and col1 being the bias label
 ###########
 
 liberal_news = ['Buzzfeed News','CNN','Vox']
