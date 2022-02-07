@@ -1,4 +1,3 @@
-# Import all the necessary dependencies
 import os
 import json
 import argparse
@@ -148,7 +147,6 @@ def main():
     args = get_train_test_args()
 
     # Set a seed
-
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
     model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
 
