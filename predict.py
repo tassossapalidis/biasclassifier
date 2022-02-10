@@ -1,6 +1,6 @@
 import torch
 
-#from transformers import DistilBertTokenizerFast
+from transformers import DistilBertTokenizerFast
 from transformers import DistilBertForSequenceClassification
 
 
@@ -13,7 +13,11 @@ def load_model():
 		return model
 
 def score_bias(model, text_input):
-	pass
-
-model = load_model()
-
+	tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
+	model_input = tokenizer(text_input,
+                stride=128,
+                truncation=True,
+                max_length=384,
+                padding=True)
+	score = model(model_input)
+	return score
