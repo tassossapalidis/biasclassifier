@@ -14,4 +14,7 @@ from predict import *
 
 text_input = st.text_area('Input text here:') 
 
+model = load_model()
+
+scores = score_bias(model, text_input)
 

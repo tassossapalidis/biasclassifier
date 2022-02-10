@@ -12,6 +12,6 @@ def load_model():
 		model = model.eval()
 		return model
 
-model = load_model()
-
+def score_bias(model, text_input):
+	pass
 
