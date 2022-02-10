@@ -24,6 +24,9 @@ def prepare_train_data(folder):
     # get csv files from folder
     dir = os.path.join(folder, '*.csv')
     data_files = glob.glob(dir)
+
+    assert len(data_files) > 0, "data files or folder not found at {}".format(folder)
+
     # iterate through csv files
     for data_file in data_files:
         curr_data = pd.read_csv(data_file)
@@ -127,4 +130,4 @@ if __name__ == '__main__':
     data = pd.DataFrame(list(zip(x, y)),
                columns =['content', 'label'])
     
-    data.to_csv(args.train_data_filename, index = False, header = False)
+    data.to_csv(args.train_data_filename, index = False, header = True)

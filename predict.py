@@ -15,3 +15,5 @@ def load_model():
 def score_bias(model, text_input):
 	pass
 
+model = load_model()
+

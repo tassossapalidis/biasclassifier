@@ -1,4 +1,3 @@
-# Import all the necessary dependencies
 import os
 import json
 import argparse
@@ -13,7 +12,7 @@ from collections import OrderedDict
 from transformers import DistilBertTokenizerFast
 from transformers import DistilBertForSequenceClassification
 from datasets import Dataset
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 import util
 from args import get_train_test_args
 
@@ -106,7 +105,8 @@ class Trainer():
         for epoch in range(self.num_epochs):
             self.log.info(f'Epoch: {epoch}')
             i = 0
-            with torch.enable_grad(), tqdm(total=len(train_dataloader.dataset)) as progress_bar:
+
+            with torch.enable_grad(), tqdm(total=len(train_dataloader.dataset), miniters=1, mininterval=0) as progress_bar:
                 for batch in train_dataloader:
                     # get the inputs; data is a list of [inputs, labels]
                     inputs, labels = batch
@@ -121,8 +121,8 @@ class Trainer():
                     loss.backward()
                     optimizer.step()
 
-                    # print statistics
-                    #running_loss += loss.item()
+                    progress_bar.update(inputs.shape[0])
+                    progress_bar.set_postfix(epoch=epoch, NLL=loss.item())
 
                     if i % self.eval_every == self.eval_every - 1:    # print every 20 mini-batches
                         self.log.info(f'Evaluating at epoch {epoch} step {i}...')
@@ -147,10 +147,10 @@ def main():
     # Get arguments
     args = get_train_test_args()
 
-    # Set a seed
-
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
     model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
+
+    print("Is CUDA available? {}".format(torch.cuda.is_available()))
 
     if args.load_dir:
         model = DistilBertForSequenceClassification.from_pretrained(args.load_dir)
@@ -167,7 +167,7 @@ def main():
 
             trainer = Trainer(args, log)
 
-            df_train = pd.read_csv("data/train.csv")
+            df_train = pd.read_csv(args.train_file).dropna()
 
             # Prep training dataset
             train_input = tokenizer(list(df_train.content.array),
@@ -181,7 +181,7 @@ def main():
 
             # Prep validation dataset
             log.info("Preparing Validation Data...")
-            df_val = pd.read_csv("data/validation.csv")
+            df_val = pd.read_csv(args.val_file).dropna()
 
             val_input = tokenizer(list(df_val.content.array),
                 stride=128,
@@ -193,17 +193,18 @@ def main():
             val_dataset = NewsDataset(val_input['input_ids'], val_labels)
 
             # Data Loaders
-            train_loader = torch.utils.data.DataLoader(train_dataset, 
-                batch_size=args.batch_size, 
-                shuffle=True, 
+            train_loader = torch.utils.data.DataLoader(train_dataset,
+                batch_size=args.batch_size,
+                shuffle=True,
                 num_workers=2)
 
-            val_loader = torch.utils.data.DataLoader(val_dataset, 
-                batch_size=args.batch_size, 
-                shuffle=True, 
+            val_loader = torch.utils.data.DataLoader(val_dataset,
+                batch_size=args.batch_size,
+                shuffle=True,
                 num_workers=2)
 
             best_scores = trainer.train(model, train_loader, val_loader)
+            print(best_scores)
 
     if args.do_eval:
         args.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -216,7 +217,7 @@ def main():
         log.info("Preparing Test Data...")
 
         model.to(args.device)
-        df_test = pd.read_csv("data/test.csv")
+        df_test = pd.read_csv(args.eval_file)
 
         test_input = tokenizer(list(df_test.content.array),
                 stride=128,
