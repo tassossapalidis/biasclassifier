@@ -9,7 +9,7 @@ import seaborn as sns
 
 sns.set_theme(style="darkgrid")
 sns.set()
-st.title('Check Text for Political Bias')
+st.title('Check Text for Political Bias')   
 
 model = load_model()
 
