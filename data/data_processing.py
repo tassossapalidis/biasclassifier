@@ -4,6 +4,7 @@ import numpy as np
 import os
 import pandas as pd
 import re
+from sklearn.model_selection import train_test_split
 
 ## USAGE ##
 # use process_input function to format an input for inference
@@ -146,13 +147,46 @@ def clean_sentence(sentence, news_source):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Preprocess data.')
-    parser.add_argument('data_folder', type = str, help = 'folder containing .csv training data files; e.g. ./data')
-    parser.add_argument('train_data_filename', type = str, help = 'name of output data file')
-    parser.add_argument('min_length', type = int, help = 'minimum number of text words in a single example')
+    parser.add_argument('--data_folder', type = str, help = 'folder containing .csv training data files; e.g. ./data')
+    parser.add_argument('--train_data_filename', type = str, help = 'name of train data file')
+    parser.add_argument('--val_data_filename', type = str, help = 'name of validation data file')
+    parser.add_argument('--test_data_filename', type = str, help = 'name of test data file')
+
+    parser.add_argument('--min_length', type = int, help = 'minimum number of text words in a single example')
 
     args = parser.parse_args()
 
     x, y = prepare_train_data(args.data_folder, args.min_length)
     data = pd.DataFrame(list(zip(x, y)),
                     columns =['content', 'label'])
-    data.to_csv(args.train_data_filename, index = False, header = True)
+
+    X_train, X_test, y_train, y_test = train_test_split(data['content'], data['label'],test_size=0.2, random_state=42)
+    # 80% of data to train
+    train_data = pd.DataFrame(list(zip(X_train, y_train)),
+                    columns =['content', 'label'])
+    print("Number of Examples in Training", len(y_train))
+    print("Percentage Conservative in Training", float(sum(y_train)) / len(y_train))
+
+    # 20% of data to evaluation
+    eval_data = pd.DataFrame(list(zip(X_test, y_test)),
+                    columns =['content', 'label'])
+
+    X_val, X_test, y_val, y_test = train_test_split(eval_data['content'], eval_data['label'],test_size=0.8, random_state=42)
+
+    # 4% of data to training during validation
+    val_data = pd.DataFrame(list(zip(X_val, y_val)),
+                    columns =['content', 'label'])
+    print("Number of Examples in Validation", len(y_val))
+    print("Percentage Conservative in Validation", float(sum(y_val)) / len(y_val))
+
+
+    # 16% of data to test 
+    test_data = pd.DataFrame(list(zip(X_test, y_test)),
+                    columns =['content', 'label'])
+    print("Number of Examples in Test", len(y_test))
+    print("Percentage Conservative in Test", float(sum(y_test)) / len(y_test))
+
+
+    train_data.to_csv(args.train_data_filename, index = False, header = True)
+    val_data.to_csv(args.val_data_filename, index = False, header = True)
+    test_data.to_csv(args.test_data_filename, index = False, header = True)
