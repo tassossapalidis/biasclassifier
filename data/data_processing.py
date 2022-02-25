@@ -19,7 +19,7 @@ conservative_news = ['Breitbart','Fox News','National Review']
 def process_input(text):
     return [clean_sentence(sentence, '') for sentence in split_sentences(text)]
 
-def prepare_train_data(folder, min_length = 20):
+def load_data(folder):
     data = pd.DataFrame()
 
     # get csv files from folder
@@ -36,10 +36,15 @@ def prepare_train_data(folder, min_length = 20):
     # get cleaned dataframe
     data = prepare_dataframe(data)
 
+    return data
+
+
+def prepare_train_data(dataframe, min_length = 20):
+
     # get list of sentences and labels
     X = []
     y = []
-    for _, row in data.iterrows():
+    for _, row in dataframe.iterrows():
         title = clean_sentence(row['title'], row['publication'])
         sentences = [clean_sentence(sentence, row['publication']) for sentence in split_sentences(row['content'], min_length)]
 
@@ -156,35 +161,58 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    x, y = prepare_train_data(args.data_folder, args.min_length)
-    data = pd.DataFrame(list(zip(x, y)),
-                    columns =['content', 'label'])
+    full_df = load_data(args.data_folder)
+    X_train, X_test, y_train, y_test = train_test_split(full_df[['content', 'publication', 'title']], 
+        full_df['bias'],
+        test_size=0.2, 
+        random_state=42)
 
-    X_train, X_test, y_train, y_test = train_test_split(data['content'], data['label'],test_size=0.2, random_state=42)
     # 80% of data to train
-    train_data = pd.DataFrame(list(zip(X_train, y_train)),
-                    columns =['content', 'label'])
-    print("Number of Examples in Training", len(y_train))
-    print("Percentage Conservative in Training", float(sum(y_train)) / len(y_train))
+    train_df = pd.concat([X_train, y_train], axis=1)
+    print("Number of Articles in Training", len(y_train))
+    print("Percentage Conservative Articles in Training", float(sum(y_train)) / len(y_train))
 
     # 20% of data to evaluation
-    eval_data = pd.DataFrame(list(zip(X_test, y_test)),
-                    columns =['content', 'label'])
-
-    X_val, X_test, y_val, y_test = train_test_split(eval_data['content'], eval_data['label'],test_size=0.8, random_state=42)
+    eval_df = pd.concat([X_test, y_test], axis=1)
+    X_val, X_test, y_val, y_test = train_test_split(eval_df[['content', 'publication', 'title']], 
+        eval_df['bias'],
+        test_size=0.8, 
+        random_state=42)
 
     # 4% of data to training during validation
-    val_data = pd.DataFrame(list(zip(X_val, y_val)),
-                    columns =['content', 'label'])
-    print("Number of Examples in Validation", len(y_val))
-    print("Percentage Conservative in Validation", float(sum(y_val)) / len(y_val))
+    val_df = pd.concat([X_val, y_val], axis=1)
+    print("Number of Articles in Validation", len(y_val))
+    print("Percentage Conservative Articles in Validation", float(sum(y_val)) / len(y_val))
 
 
     # 16% of data to test 
-    test_data = pd.DataFrame(list(zip(X_test, y_test)),
+    test_df = pd.concat([X_test, y_test], axis=1)
+    print("Number of Articles in Test", len(y_test))
+    print("Percentage Conservative Articles in Test", float(sum(y_test)) / len(y_test))
+
+    print("Preparing Training Data...")
+    x_tr, y_tr = prepare_train_data(train_df, args.min_length)
+    train_data = pd.DataFrame(list(zip(x_tr, y_tr)),
                     columns =['content', 'label'])
-    print("Number of Examples in Test", len(y_test))
-    print("Percentage Conservative in Test", float(sum(y_test)) / len(y_test))
+
+    print("Number of Passages in Training", len(y_tr))
+    print("Percentage Conservative Passages in Training", float(sum(y_tr)) / len(y_tr))
+
+
+    print("Preparing Validation Data...")
+    x_va, y_va = prepare_train_data(val_df, args.min_length)
+    val_data = pd.DataFrame(list(zip(x_va, y_va)),
+                    columns =['content', 'label'])
+    print("Number of Passages in Validation", len(y_va))
+    print("Percentage Conservative Passages in Validation", float(sum(y_va)) / len(y_va))
+
+
+    print("Preparing Test Data...")
+    x_te, y_te = prepare_train_data(test_df, args.min_length)
+    test_data = pd.DataFrame(list(zip(x_te, y_te)),
+                    columns =['content', 'label'])
+    print("Number of Passages in Test", len(y_te))
+    print("Percentage Conservative Passages in Test", float(sum(y_te)) / len(y_te))
 
 
     train_data.to_csv(args.train_data_filename, index = False, header = True)
