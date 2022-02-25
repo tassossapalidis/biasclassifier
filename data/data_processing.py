@@ -18,7 +18,7 @@ conservative_news = ['Breitbart','Fox News','National Review']
 def process_input(text):
     return [clean_sentence(sentence, '') for sentence in split_sentences(text)]
 
-def prepare_train_data(folder):
+def prepare_train_data(folder, min_length = 20):
     data = pd.DataFrame()
 
     # get csv files from folder
@@ -39,11 +39,14 @@ def prepare_train_data(folder):
     X = []
     y = []
     for _, row in data.iterrows():
-        title = [clean_sentence(sentence, row['publication']) for sentence in split_sentences(row['title'])]
-        sentences = [clean_sentence(sentence, row['publication']) for sentence in split_sentences(row['content'])]
-        X += title
-        X += sentences
-        y += [row['bias']] * len(title)
+        title = clean_sentence(row['title'], row['publication'])
+        sentences = [clean_sentence(sentence, row['publication']) for sentence in split_sentences(row['content'], min_length)]
+
+        # append the title (first segment) to each sentence and add it to the data
+        for sentence in sentences:
+          title_sentence = ' [SEP] '.join([title, sentence])
+          X += [title_sentence]
+
         y += [row['bias']] * len(sentences)
 
     return X, y
@@ -56,7 +59,7 @@ def prepare_dataframe(data):
     data_transform = data[data['publication'].isin(liberal_news) | 
                      data['publication'].isin(conservative_news)]
     data_transform = data_transform.drop(
-        ['Unnamed: 0', 'id','author','date','year','month','url'],
+        ['Unnamed: 0', 'Unnamed: 0.1', 'id','author','date','year','month','url'],
         axis = 1)
     data_transform['bias'] = np.where(data_transform['publication'].isin(liberal_news), 0, 1)
     data_transform = data_transform.reset_index()
@@ -64,7 +67,7 @@ def prepare_dataframe(data):
     return data_transform
 
 # from: https://stackoverflow.com/questions/4576077/how-can-i-split-a-text-into-sentences
-def split_sentences(text):
+def split_sentences(text, min_length = 20):
     alphabets= "([A-Za-z])"
     prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
     suffixes = "(Inc|Ltd|Jr|Sr|Co)"
@@ -88,15 +91,35 @@ def split_sentences(text):
     if "\"" in text: text = text.replace(".\"","\".")
     if "!" in text: text = text.replace("!\"","\"!")
     if "?" in text: text = text.replace("?\"","\"?")
-    text = text.replace(".",".<stop>")
-    text = text.replace("?","?<stop>")
-    text = text.replace("!","!<stop>")
+    text = text.replace(". ",".<stop>")
+    text = text.replace("? ","?<stop>")
+    text = text.replace("! ","!<stop>")
     text = text.replace("<prd>",".")
-    sentences = text.split("<stop>")
-    sentences = sentences[:-1]
-    sentences = [s.strip() for s in sentences]
+    sentences = text.split("<stop>") # split at the stop token.
 
-    return sentences
+    if len(sentences) > 1:
+      sentences = sentences[:-1] # what's the point of this line?
+
+    # combine consecutive sentences until we have reached min number of words
+    sentences_combo = []
+    idx = 0
+    while idx < len(sentences):
+      s_in = sentences[idx]
+      combo_len = len(s_in.split(" "))
+      combo_sents = [s_in]
+      while combo_len < min_length and idx < len(sentences) - 1:
+        combo_sents += [sentences[idx+1]] # needs to be list, otherwise string will be interpreted as list
+        combo_len += len(sentences[idx+1].split(" "))
+        idx += 1
+      s_out = ' '.join(combo_sents) # join to the next sentence
+
+      sents_length = sum([len(s.split(" ")) for s in sentences])
+      if (combo_len >= min_length):
+        sentences_combo += [s_out]
+      idx += 1
+    sentences_combo = [s.strip() for s in sentences_combo]
+
+    return sentences_combo
 
 
 def clean_sentence(sentence, news_source):
@@ -111,8 +134,10 @@ def clean_sentence(sentence, news_source):
     if (len(source_idx) > 0 and source_idx[0] < 5):
         sentence = sentence[source_idx[0] + 1:]
     sentence = ' '.join(sentence)
-    # remove punctuation
-    sentence = re.sub(r'[^\w\s]', '', sentence)
+
+    # remove punctuation (don't do this?)
+    #sentence = re.sub(r'[^\w\s]', '', sentence)
+
     # remove news_source
     if len(news_source) > 0:
         sentence = re.sub(r'\b' + re.escape(news_source.lower()) + r'\b','<source_token>', sentence)
@@ -123,11 +148,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Preprocess data.')
     parser.add_argument('data_folder', type = str, help = 'folder containing .csv training data files; e.g. ./data')
     parser.add_argument('train_data_filename', type = str, help = 'name of output data file')
+    parser.add_argument('min_length', type = int, help = 'minimum number of text words in a single example')
 
     args = parser.parse_args()
 
-    x, y = prepare_train_data(args.data_folder)
+    x, y = prepare_train_data(args.data_folder, args.min_length)
     data = pd.DataFrame(list(zip(x, y)),
-               columns =['content', 'label'])
-    
+                    columns =['content', 'label'])
     data.to_csv(args.train_data_filename, index = False, header = True)
