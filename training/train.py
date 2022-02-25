@@ -30,7 +30,7 @@ class NewsDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        
+
         input = np.asarray(self.X[idx])
         output = np.asarray(self.y[idx,:])
         return (input, output)
@@ -130,13 +130,13 @@ class Trainer():
 
                         results_str = ', '.join(f'{k}: {v:05.2f}' for k, v in scores.items())
                         self.log.info('Visualizing in TensorBoard...')
-                        for k, v in core.items():
-                            tbx.add_scalar(f'val/{k}', v, i)
+                        #for k, v in scores.items():
+                        #    tbx.add_scalar(f'val/{k}', v, i)
                         self.log.info(f'Eval {results_str}')
 
-                        if scores['accuracy'] >= best_scores['accuracy']:
-                            best_scores = scores
-                            self.save(model)
+                        #if scores['accuracy'] >= best_scores['accuracy']:
+                        best_scores = scores
+                        self.save(model)
                     i += 1
 
         return best_scores
@@ -167,7 +167,7 @@ def main():
 
             trainer = Trainer(args, log)
 
-            df_train = pd.read_csv(args.train_file).dropna()
+            df_train = pd.read_csv(args.train_file, lineterminator="\n").dropna() #.head(n=1000)
 
             # Prep training dataset
             train_input = tokenizer(list(df_train.content.array),
@@ -181,7 +181,7 @@ def main():
 
             # Prep validation dataset
             log.info("Preparing Validation Data...")
-            df_val = pd.read_csv(args.val_file).dropna()
+            df_val = pd.read_csv(args.val_file, lineterminator="\n").dropna()
 
             val_input = tokenizer(list(df_val.content.array),
                 stride=128,
@@ -227,8 +227,8 @@ def main():
         test_labels = list(df_test.label.array)
         test_dataset = NewsDataset(test_input['input_ids'], test_labels)
 
-        test_loader = torch.utils.data.DataLoader(test_dataset, 
-            batch_size=args.batch_size, 
+        test_loader = torch.utils.data.DataLoader(test_dataset,
+            batch_size=args.batch_size,
             shuffle=True,
             num_workers=2)
 
