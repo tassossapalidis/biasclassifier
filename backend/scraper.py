@@ -11,6 +11,7 @@ def get_content(url):
     article = Article(url)
     article.download()
     article.parse()
+    
     return article.title.strip().replace('\n',''), article.text.strip().replace('\n','')
 
 if __name__ == '__main__':

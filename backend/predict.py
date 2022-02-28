@@ -3,13 +3,13 @@ import torch
 from transformers import DistilBertTokenizer
 from transformers import DistilBertForSequenceClassification
 
-def load_model():
+def load_model(model_dir):
 	'''
 	Loads DistilBert model with our parameters
 	'''
 	with torch.no_grad():
 		model = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased")
-		model_dict = torch.load('./pytorch_model.bin', map_location = 'cpu')
+		model_dict = torch.load(model_dir, map_location = 'cpu')
 		model.load_state_dict(model_dict)
 		model = model.eval()
 		return model

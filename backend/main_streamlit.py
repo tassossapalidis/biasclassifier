@@ -11,7 +11,7 @@ sns.set_theme(style="darkgrid")
 sns.set()
 st.title('Check Text for Political Bias')   
 
-model = load_model()
+model = load_model('./model_bin/pytorch_model.bin')
 
 text_input = st.text_area('Input text here:') 
 if len(text_input) != 0:
