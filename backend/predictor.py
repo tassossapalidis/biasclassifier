@@ -1,7 +1,5 @@
 import numpy as np
 import os
-from predict import *
-from scraper import *
 
 class Preprocessor(object):
 
