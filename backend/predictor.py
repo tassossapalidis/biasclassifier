@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from predict import *
-from scraper import *
+import utils
 
 class Preprocessor(object):
 
@@ -9,10 +9,7 @@ class Preprocessor(object):
         """
         Preprocesses text input
         """
-        text_input = get_content(url)
-        text_input = text_input[0] + '<TOKEN>' + text_input[1]
-
-        return text_input
+        return prepare_inference_input(url, 100)
 
 class MyPredictor(object):
     """An example Predictor for an AI Platform custom prediction routine."""
