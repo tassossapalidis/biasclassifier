@@ -1,12 +1,22 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel="stylesheet" href="button.css">
+    <link rel="stylesheet" href="style.css">
+    <img id="toplogo" src="/assets/logo.png"></img>
   </head>
   <body>
-    <button id="runBiasClassifier"></button>
-    <p>Testing</p>
-    <div id="showText"></div>
+    <h3>
+      A simple application to evaluate political bias in the news articles you read
+    </h3>
+    <p>
+      Click the button below to produce a bias score for the article on your current tab.
+    </p>
+    <div class="buttonDiv">
+      <button id="runPolarity">Analyze Text</button>
+    </div>
+    <!-- <p>Testing</p> -->
+    <div id="results"></div>
+    <div id="isRun"></div>
     <script src="popup.js"></script>
   </body>
 </html>
