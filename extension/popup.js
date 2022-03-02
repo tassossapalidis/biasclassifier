@@ -50,11 +50,21 @@ async function getPrediction(url) {
     })
     .then(response => {return response.json()})
     .then(data => {
-        let score = data[0][0];
-        let score_child = document.createTextNode('This article is classified as '.concat(Math.round((score * 100)).toString()).concat('% liberal'));
-        console.log(score);
+        console.log(data)
+        let median_conf = data['med_conf'];
+        let max_conf = data['max_conf'];
+        let median_class = data['med_class'];
+        let maximum_class = data['max_class'];
+        let median_leaning = "liberal";
+        let maximum_leaning = "liberal";
+        if (median_class == 1) median_leaning = "conservative"
+        if (maximum_class == 1) maximum_leaning = "conservative"
+
+        let median_child = document.createTextNode('This article\'s median bias is '.concat(Math.round((median_conf * 100)).toString()).concat('% ').concat(median_leaning));
+        let maximum_child = document.createTextNode('This article\'s maximum bias is '.concat(Math.round((max_conf * 100)).toString()).concat('% ').concat(maximum_leaning));
         removeAllChildNodes(divResults);
-        divResults.appendChild(score_child);
+        divResults.appendChild(median_child)
+        divResults.appendChild(maximum_child);
     })
     .catch(error => console.error(error));
 
