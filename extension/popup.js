@@ -1,32 +1,39 @@
 let runPolarity = document.getElementById("runPolarity");
 let divIsRun = document.getElementById('isRun');
-let divResults = document.getElementById('results');
+let divResults1 = document.getElementById('result1');
+let divResults2 = document.getElementById('result2');
+let isloaded = false;
 
 let api_url = 'https://us-west1-cs-329-bias-classifier.cloudfunctions.net/polarity_func-2';
 
-// When the button is clicked, inject setPageBackgroundColor into current page
-runPolarity.addEventListener("click", async () => {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        if (runPolarity.textContent == `Complete`) {
-            let run_child = document.createTextNode('Analysis already run on this page');
-            removeAllChildNodes(divIsRun);
-            divIsRun.appendChild(run_child);
-        }
-        else {
-            let res = Promise.all([amendHTML(tabs), getPrediction(tabs[0].url)]);
-            runPolarity.textContent = `Complete`;
+document.addEventListener("DOMContentLoaded", function() {
+    isloaded = true;
+})
+
+runPolarity.addEventListener("click", async() => {
+    if (isloaded) {
+        chrome.tabs.query({active: true, currentWindow: true}, async function(tabs) {
+            amendHTML(tabs);
+            let res = await getPrediction(tabs[0]);
             runPolarity.classList.remove("button--loading")
-        }
+            runPolarity.textContent = `Complete`
     });
+    }
 });
+
+
 
 function amendHTML(tabs) {
     runPolarity.textContent = ``;
     runPolarity.classList.add("button--loading");
+    removeAllChildNodes(divResults1)
+    removeAllChildNodes(divResults2);
+
     let title = tabs[0].title;
-    let results_child = document.createTextNode('Model results here');
+    //let results_child = document.createTextNode('Model results here');
     let title_child = document.createTextNode('Article title: '.concat(title));
-    divResults.appendChild(results_child);
+    //divResults1.appendChild(results_child);
+
     removeAllChildNodes(divIsRun);
     divIsRun.appendChild(title_child);
 }
@@ -39,11 +46,11 @@ function removeAllChildNodes(parent) {
     }
 }
 
-async function getPrediction(url) {
-    JSON.stringify(url);
+async function getPrediction(tab) {
+    JSON.stringify(tab.url);
     let response = await fetch(api_url, {
         method: 'POST',
-        body: JSON.stringify({"url": url}),
+        body: JSON.stringify({"url": tab.url}),
         headers: {
             "Content-Type": "application/json"
         }
@@ -62,69 +69,29 @@ async function getPrediction(url) {
 
         let median_child = document.createTextNode('This article\'s median bias is '.concat(Math.round((median_conf * 100)).toString()).concat('% ').concat(median_leaning));
         let maximum_child = document.createTextNode('This article\'s maximum bias is '.concat(Math.round((max_conf * 100)).toString()).concat('% ').concat(maximum_leaning));
-        removeAllChildNodes(divResults);
-        divResults.appendChild(median_child)
-        divResults.appendChild(maximum_child);
+
+        removeAllChildNodes(divResults1);
+        removeAllChildNodes(divResults2);
+        divResults1.appendChild(median_child)
+        divResults2.appendChild(maximum_child);
+
+        let attr_sentences = data['bias_sentences']
+        let substring = attr_sentences[0].substring(45, Math.min(115, attr_sentences[0].length))
+        let selector = 'p:contains("'.concat(substring).concat('")');
+
+        console.log(selector)
+
+        let msg = {
+            sel : selector
+        }
+
+        console.log(tab.id)
+        chrome.tabs.sendMessage(tab.id,msg);
+
     })
     .catch(error => console.error(error));
 
     return response
 
-    // .catch(error => alert('Error:', error));
-    // .then(res => {
-    //     $.each(res, function( index, value ) {
-    //         let value_child = document.createTextNode(value);
-    //         removeAllChildNodes(divResults);
-    //         divResults.appendChild(value_child)
-    //     });
-    // })
-    // .catch(error => console.error('Error:', error));
 }
 
-
-
-// // capture all text
-// var textToSend = document.body.innerText;
-
-// // summarize and send back
-// const api_url = 'YOUR_GOOGLE_CLOUD_FUNCTION_URL'; 
-// function getPrediction(url) {
-//     fetch(api_url, {
-//         method: 'POST',
-//         body: JSON.stringify(textToSend),
-//         headers:{
-//           'Content-Type': 'application/json'
-//         } })
-//       .then(data => { return data.json() })
-//       .then(res => { 
-//           $.each(res, function( index, value ) {
-//               value = unicodeToChar(value).replace(/\\n/g, '');
-//               document.body.innerHTML = document.body.innerHTML.split(value).join('<span style="background-color: #fff799;">' + value + '</span>');
-//           });
-//        })
-//       .catch(error => console.error('Error:', error));
-// }
-
-// // make REST API call
-// function getPrediction(url) {
-//     let instance = {"instances": [url]}
-//     httpRequest = new XMLHttpRequest();
-//     if (!httpRequest) {
-//         alert('Giving up :( Cannot create an XMLHTTP instance');
-
-//         return false;
-//     }
-//       httpRequest.onreadystatechange = alertContents(httpRequest);
-//       httpRequest.open('POST', 'https://https://us-central1-ml.googleapis.com/v1/{name=projects/**}:predict');
-//       httpRequest.send();
-// }
-
-// function alertContents(httpRequest) {
-//     if (httpRequest.readyState === XMLHttpRequest.DONE) {
-//       if (httpRequest.status === 200) {
-//         alert(httpRequest.responseText);
-//       } else {
-//         alert('There was a problem with the request.');
-//       }
-//     }
-// }

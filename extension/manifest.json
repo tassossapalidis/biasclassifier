@@ -7,6 +7,12 @@
 	"background": {
 		"service_worker": "background.js"
 	},
+	"content_scripts": [
+		{
+			"matches": ["https://*/*"],
+			"js": ["jquery-3.6.0.min.js", "content.js"]
+		}
+	],
 	"permissions": ["tabs", "activeTab", "storage", "activeTab", "scripting"],
 	"host_permissions": [
 		"https://us-west1-cs-329-bias-classifier.cloudfunctions.net/polarity_func"

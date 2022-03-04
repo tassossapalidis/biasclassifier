@@ -86,37 +86,32 @@ def chunk_sentences(sentences, min_length = 20):
     return sentences_chunked
 
 # URL to Model Inputs
-def prepare_inference_input(url: str, min_length: int):
-  raw_text = scraper.get_content(url)
-  raw_title = raw_text[0]
-  raw_content = raw_text[1]
+def prepare_inference_input(chunked_sentences: str, raw_title : str):
+    title = clean_sentence(raw_title)
+    sentences = [clean_sentence(sentence) for sentence in chunked_sentences]
 
-  title = clean_sentence(title)
-  raw_sentences = split_text_to_sentences(content)
-  sentences = [clean_sentence(sentence) for sentence in chunk_sentences(raw_sentences, min_length)]
+    input_passages = []
 
-  input_passages = []
+    # append the title (first segment) to each sentence and add it to the data
+    for sentence in sentences:
+        title_sentence = ' [SEP] '.join([title, sentence])
+        input_passages += [title_sentence]
+    
+    return input_passages
 
-  # append the title (first segment) to each sentence and add it to the data
-  for sentence in sentences:
-    title_sentence = ' [SEP] '.join([title, sentence])
-    input_passages += [title_sentence]
-
-  return input_sentences
-
-	
+  
 def aggregate_model_outputs(probs: list):
   probs = np.array(probs)
   avg_probs = np.mean(probs, axis=0)
   med_probs = np.median(probs, axis=0)
   max_probs = np.max(probs, axis=0)
 
-  agg_result = {"avg_class": np.argmax(avg_probs),
-                "avg_conf": np.max(avg_probs),
-                "med_class": np.argmax(med_probs),
-                "med_conf": np.max(med_probs),
-                "max_class": np.argmax(max_probs),
-                "max_conf": np.max(max_probs)}
+  agg_result = {"avg_class": int(np.argmax(avg_probs)),
+                "avg_conf": float(np.max(avg_probs)),
+                "med_class": int(np.argmax(med_probs)),
+                "med_conf": float(np.max(med_probs)),
+                "max_class": int(np.argmax(max_probs)),
+                "max_conf": float(np.max(max_probs))}
   return agg_result
 
 def identify_attributions(probs: list, class_label: int, thresh: float):
@@ -125,6 +120,5 @@ def identify_attributions(probs: list, class_label: int, thresh: float):
   if (thresh > np.max(class_probs)):
     thresh = np.max(class_probs)
 
-  return np.where(class_probs >= thresh)
-
-
+  attr_passages = np.where(class_probs >= thresh)
+  return attr_passages[0].tolist()

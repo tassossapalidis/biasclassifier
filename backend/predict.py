@@ -29,4 +29,3 @@ def score_bias(model, text_input):
 				return_tensors='pt')
 
 	score = model(**model_input)
-	return score
