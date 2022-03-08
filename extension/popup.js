@@ -76,13 +76,18 @@ async function getPrediction(tab) {
         divResults2.appendChild(maximum_child);
 
         let attr_sentences = data['bias_sentences']
-        let substring = attr_sentences[0].substring(45, Math.min(115, attr_sentences[0].length))
-        let selector = 'p:contains("'.concat(substring).concat('")');
+        let substring = attr_sentences[0].substring(45, Math.min(95, attr_sentences[0].length))
+        let splits = substring.split(".")
+        let selectors = [];
 
-        console.log(selector)
+        for (let i = 0; i < splits.length; i++) {
+            selectors[i] = 'p:contains("'.concat(splits[i]).concat('")');
+        }
+
+        console.log(selectors)
 
         let msg = {
-            sel : selector
+            sels : selectors
         }
 
         console.log(tab.id)
