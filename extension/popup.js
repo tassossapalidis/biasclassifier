@@ -79,15 +79,24 @@ async function getPrediction(tab) {
         let substring = attr_sentences[0].substring(45, Math.min(95, attr_sentences[0].length))
         let splits = substring.split(".")
         let selectors = [];
-
+        
         for (let i = 0; i < splits.length; i++) {
-            selectors[i] = 'p:contains("'.concat(splits[i]).concat('")');
+            if (selectors.length > 0) {
+                if (selectors[0].length < splits[i].length) {
+                    selectors[0] = 'p:contains("'.concat(splits[i]).concat('")');
+                }
+            }
+            else {
+                selectors[0] = 'p:contains("'.concat(splits[i]).concat('")');
+            }
         }
 
         console.log(selectors)
 
         let msg = {
-            sels : selectors
+            sels : selectors,
+            bias_type : maximum_leaning,
+            max_conf : max_conf,
         }
 
         console.log(tab.id)
