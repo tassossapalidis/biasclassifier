@@ -58,10 +58,13 @@ button {
   }
 }
 
-#results {
+#result1 {
+  margin: auto;
   margin-top: 10pt;
   height: 50px;
   width: 200px;
+  text-align: center;
+  font-weight: bold;
 }
 
 #isRun {

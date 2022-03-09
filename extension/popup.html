@@ -9,17 +9,19 @@
       A simple application to evaluate political bias in the news articles you read
     </h3>
     <p>
-      Click the button below to produce a bias score for the article on your current tab.
+      Click the button below to produce a bias score for the article on your current tab. Any significantly biased portions
+      of the article will be highlighted.
     </p>
     <div class="buttonDiv">
       <button id="runPolarity">Analyze Text</button>
     </div>
-    <!-- <p>Testing</p> -->
+    <canvas id="gauge"></canvas>
     <div id="result1"></div>
-    <div id="result2"></div>
+    <!-- <div id="result2"></div> -->
     <div id="isRun"></div>
     <script src="popup.js"></script>
     <script src="content.js"></script>
     <script src="jquery-3.6.0.min.js"></script>
+    <script src="gauge.js"></script>
   </body>
 </html>
