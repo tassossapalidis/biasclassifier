@@ -4,8 +4,10 @@ let divResults1 = document.getElementById('result1');
 let divResults2 = document.getElementById('result2');
 let isloaded = false;
 
+// url to Cloud Function
 let api_url = 'https://us-west1-cs-329-bias-classifier.cloudfunctions.net/polarity_func-2';
 
+// configure the gauge visual
 var gaugeOpts = {
     // color configs
     colorStart: "#6fadcf",
@@ -28,17 +30,6 @@ var gaugeOpts = {
       {strokeStyle: "#FB607E", min: .75, max: .9},
       {strokeStyle: "#E92A39", min: .9, max: 1}
     ],
-    // render ticks
-    // renderTicks: {
-    //   divisions: 5,
-    //   divWidth: 1.1,
-    //   divLength: 0.7,
-    //   divColor: "#333333",
-    //   subDivisions: 3,
-    //   subLength: 0.5,
-    //   subWidth: 0.6,
-    //   subColor: "#666666"
-    // },
     // the span of the gauge arc
     angle: 0.15,
     // line thickness
@@ -55,7 +46,7 @@ var gaugeOpts = {
     highDpiSupport: true
 };
 
-
+// wait for click
 document.addEventListener("DOMContentLoaded", function() {
     isloaded = true;
 })
@@ -72,18 +63,15 @@ runPolarity.addEventListener("click", async() => {
 });
 
 
-
+// edit popup after button is clicked
 function amendHTML(tabs) {
     runPolarity.textContent = ``;
     runPolarity.classList.add("button--loading");
     removeAllChildNodes(divResults1)
-    // removeAllChildNodes(divResults2);
 
     let title = tabs[0].title;
-    //let results_child = document.createTextNode('Model results here');
     bold = document.createElement('strong')
     let title_child = document.createTextNode(title);
-    //divResults1.appendChild(results_child);
 
     removeAllChildNodes(divIsRun);
     divIsRun.appendChild(title_child);
@@ -96,6 +84,7 @@ function removeAllChildNodes(parent) {
     }
 }
 
+// function to request model outputs
 async function getPrediction(tab) {
     JSON.stringify(tab.url);
     let response = await fetch(api_url, {
@@ -139,20 +128,18 @@ async function getPrediction(tab) {
                 bias_display = 'is politically neutral.'
             }
         }
-        // let median_child = document.createTextNode('This article\'s median bias is '.concat(Math.round((median_conf * 100)).toString()).concat('% ').concat(median_leaning));
+        
+        // configure div to hold predicted class
         let median_child = document.createTextNode('This article '.concat(bias_display));
-        // let maximum_child = document.createTextNode('This article\'s maximum bias is '.concat(Math.round((max_conf * 100)).toString()).concat('% ').concat(maximum_leaning));
-
         removeAllChildNodes(divResults1);
-        // removeAllChildNodes(divResults2);
         divResults1.appendChild(median_child)
-        // divResults2.appendChild(maximum_child);
 
         let attr_sentences = data['bias_sentences']
         let substring = attr_sentences[0].substring(45, Math.min(95, attr_sentences[0].length))
         let splits = substring.split(".")
         let selectors = [];
         
+        // script to send content to highlight to content.js
         for (let i = 0; i < splits.length; i++) {
             if (selectors.length > 0) {
                 if (selectors[0].length < splits[i].length) {
@@ -172,16 +159,9 @@ async function getPrediction(tab) {
 
         chrome.tabs.sendMessage(tab.id,msg);
 
-        var opts = {
-            // options here
-        };
-
+        // set up the gauge
         var target = document.getElementById('gauge'); 
         var gauge = new Gauge(target).setOptions(gaugeOpts);
-
-        // document.getElementById("results-textfield").className = "results-textfield";
-        // gauge.setTextField(document.getElementById("results-textfield"));
-        // document.getElementById("results-textfield").appendChild(median_child);
 
         gauge.maxValue = 1;
         gauge.setMinValue(0); 
@@ -200,4 +180,3 @@ async function getPrediction(tab) {
     return response
 
 }
-

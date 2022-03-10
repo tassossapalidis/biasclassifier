@@ -1,3 +1,4 @@
+// highlights appropriate text within article
 chrome.runtime.onMessage.addListener(gotMessage);
 function gotMessage(message,sender,sendresponse)
 {
