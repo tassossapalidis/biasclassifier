@@ -1,8 +1,9 @@
 # Polarity
 
 ### Installation Instructions
+Unfortunately we cannot publish or even package our Chrome Extension without it being approved for publishing on the app store. To run Polarity, you'll have to download the extension code and load it into Chrome in Extention Developer Mode. Below are instructions on how to do so.
 
-1. Download and unzip the file polarity.zip to the directory of your choosing.
+1. Download and unzip the file [polarity.zip](https://github.com/tassossapalidis/biasclassifier/blob/main/polarity.zip) to the directory of your choosing.
 2. Open the chrome browser and go to chrome://extensions/
 3. Toggle on "Developer Mode" in the top right.
 
