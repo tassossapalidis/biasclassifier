@@ -6,7 +6,7 @@
 2. Open the chrome browser and go to chrome://extensions/
 3. Toggle on "Developer Mode" in the top right.
 
-![image](./assets/chrome_extensions.png)
+![image](./assets/chrome_extensions.PNG)
 
 4. Select "Load unpacked" in the top left and select the unzipped file.
 
