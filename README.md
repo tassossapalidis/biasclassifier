@@ -1,4 +1,5 @@
 # Polarity
+Please visit [our Notion](https://goofy-toast-98c.notion.site/Polarity-Political-Bias-Detection-in-News-Articles-486cf3e4c6fa43c4aa3528f07e19a86e) for a detailed report of our project.
 
 ### Installation Instructions
 Unfortunately we cannot publish or even package our Chrome Extension without it being approved for publishing on the app store. To run Polarity, you'll have to download the extension code and load it into Chrome in Extention Developer Mode. Below are instructions on how to do so.
